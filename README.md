@@ -1,86 +1,207 @@
-# HolisticRCA
+# HolisticRCA (AIOps'22) Reproduction
 
-Artifacts accompanying HolisticRCA, a framework for failure root cause analysis in cloud-native systems from a holistic perspective. 
+This repository reproduces the paper:
 
-## Requirements
+**Holistic Root Cause Analysis for Microservice Systems (AIOps 2022)**
 
-### Dependencies
+The goal of this project is to reproduce the **HolisticRCA pipeline**, including:
 
-````
-cd ./code
-pip install -r requirements.txt
-````
+- Observability data preprocessing
+- Feature extraction from **logs / metrics / traces**
+- resource entity relation graph construction
+- Training the **HolisticRCA model**
 
-### Our Test Sandbox
+The repository extends the original implementation with a **complete data processing pipeline** for AIOps datasets.
 
-- Intel(R) Xeon(R) Gold 6226R CPU
-- 128GB RAM
-- NVIDIA GeForce RTX 4090 GPU
-- Ubuntu 20.04.6 LTS
-- Docker version 19.03.12
-- Python 3.10 (Docker image: pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel)
+---
 
-## Folder Structure
+# Project Structure
 
-Note: we have split the zip file for uploading. The following commands need to be input for the working folder:
-````
-zip model_split.zip -s=0 --out model.zip
-unzip model.zip
-````
-Then the temp data also needs to be downloaded from https://github.com/baiyanquan/HolisticRCATempData.
+```
+HolisticRCA_aiops22/
+│
+├─ code/
+│
+│  ├─ data_filter/                # Data preprocessing pipeline
+│  │
+│  │  ├─ 1.extractLogTemplate_aiops22.ipynb
+│  │  ├─ 2.extractIstioWords_aiops22.ipynb
+│  │
+│  │  ├─ 3-1.extractLogFeature_aiops22.ipynb
+│  │  ├─ 3-2.extractMetricFeature_aiops22.ipynb
+│  │  ├─ 3-3.extractTraceFeature_aiops22.ipynb
+│  │  ├─ 3-4.extractTopology_aiops22.ipynb
+│  │
+│  │  ├─ 4.LabelsGenerator_aiops22.ipynb
+│  │
+│  │  ├─ 5-1.LogGenerator_aiops22.ipynb
+│  │  ├─ 5-2.TraceGenerator_aiops22.ipynb
+│  │  ├─ 5-3.MetricGenerator_aiops22.ipynb
+│  │  ├─ 5-4.TopologyGenerator_aiops22.ipynb
+│  │
+│  │  └─ 6.dataGenerator_aiops22.ipynb
+│  │
+│  └─ HolisticRCA/
+│     └─ trainer/
+│        └─ rca_trainer.ipynb     # Model training
+│
+├─ data/
+│  ├─ raw/                       # Raw observability data
+│  ├─ interim/                   # Intermediate feature files
+│  └─ processed/                 # Final training dataset
+│
+└─ README.md
+```
 
-Finally the ``model`` and ``temp_data`` folders need be placed following the structure of the working folder:
-````
-.
-├── README.md
-├── code                                          
-│   ├── data_filter                             preprocess data
-│   │   ├── CCF_AIOps_challenge_2022            preprocess dataset A
-│   │   ├── ICASSP_AIOps_challenge_2022         preprocess dataset B
-│   │   └── Eadro_TT_and_SN                     preprocess dataset C
-│   ├── HolisticRCA                             the main model of the work
-│   │   ├── ablation                            models for ablation study
-│   │   ├── base                                base classes for model construction
-│   │   ├── config                              configuration of file paths
-│   │   ├── data_loader                         load dataset
-│   │   ├── dataset                             base class for dataset reader
-│   │   ├── explain                             mask learning component (for resource entity localization and fault-related observability data localization)
-│   │   ├── model                               main components except mask learning
-│   │   ├── trainer                             perform model training
-│   │   └── util                                RERG class and data transformation
-│   ├── shared_util                             some basic util functions
-│   ├── experiments_a.sh                        quick experiments for dataset A
-│   ├── experiments_b.sh                        quick experiments for dataset B
-│   ├── experiments_c.sh                        quick experiments for dataset C
-│   └── requirements.txt
-├── model                                       saved model data for reproduction
-└── temp_data                                   saved temp data for reproduction
-````
+---
 
-## Quick Start / Reproducibility
+# Pipeline Overview
 
-### Prerequisites
+The full reproduction pipeline consists of **three stages**:
 
-1. Prepare the Python packages in ``requirements.txt``.
-2. Unzip ``model.zip`` and ``temp_data.zip``.
+1️⃣ **Log preprocessing**
 
-### Simple Result Checking
+Extract log templates and domain-specific keywords.
 
-The saved model files are placed in ``model.zip``. Following the files ``experiments_a.sh``, ``experiments_b.sh``, or ``experiments_c.sh`` and comment out ``rca_data_trainer.train()`` in the corresponding training files. It will output the evaluation results (note that some file paths need to be changed).
+2️⃣ **Feature extraction**
 
-### Running
+Extract features from three observability sources:
 
-````
-cd ./code
-bash experiments_a.sh
-bash experiments_b.sh
-bash experiments_c.sh
-````
+- Logs
+- Metrics
+- Traces
 
-## Raw Data
+Additionally, construct the **resource entity relation graph graph**.
 
-Since the raw data is too big, we list their links here, help for downloading:
+3️⃣ **Dataset construction**
 
-- Dataset A: https://competition.aiops-challenge.com/home/competition/1496398526429724760. (Sometimes the page may be crashed, please visit https://www.bizseer.com/index.php?m=content&c=index&a=show&catid=25&id=83 for simple introduction).
-- Dataset B: https://www.aiops.sribd.cn/home/introduction.
-- Dataset C: https://doi.org/10.5281/zenodo.7615393. (Note that the actual number of fault injections is 36. Due to the limited sample size, we applied a sliding window of length 5 to each fault injection, resulting in a total of 36*5 = 180 samples.)
+Generate the final training dataset used by HolisticRCA.
+
+4️⃣ **Model training**
+
+Train the HolisticRCA model for root cause analysis.
+
+---
+
+# Data Processing Pipeline
+
+The notebooks in `code/data_filter` should be executed in the following order.
+
+---
+
+## Step 1 — Extract Log Templates
+
+```
+1.extractLogTemplate_aiops22.ipynb
+```
+
+---
+
+## Step 2 — Extract Istio Keywords
+
+```
+2.extractIstioWords_aiops22.ipynb
+```
+
+
+
+---
+
+## Step 3 — Feature Extraction
+
+### Log Features
+
+```
+3-1.extractLogFeature_aiops22.ipynb
+```
+
+
+
+---
+
+### Metric Features
+
+```
+3-2.extractMetricFeature_aiops22.ipynb
+```
+
+
+---
+
+### Trace Features
+
+```
+3-3.extractTraceFeature_aiops22.ipynb
+```
+
+
+---
+
+### resource entity relation graph
+
+```
+3-4.extractTopology_aiops22.ipynb
+```
+
+
+---
+
+## Step 4 — Label Generation
+
+```
+4.LabelsGenerator_aiops22.ipynb
+```
+
+
+---
+
+## Step 5 — Modal Data Generation
+
+
+
+```
+5-1.LogGenerator_aiops22.ipynb
+```
+
+
+```
+5-2.TraceGenerator_aiops22.ipynb
+```
+
+
+```
+5-3.MetricGenerator_aiops22.ipynb
+```
+
+
+```
+5-4.TopologyGenerator_aiops22.ipynb
+```
+
+---
+
+## Step 6 — Final Dataset Construction
+
+```
+6.dataGenerator_aiops22.ipynb
+```
+
+
+---
+
+# Model Training
+
+Training is performed using:
+
+```
+code/HolisticRCA/trainer/rca_trainer.ipynb
+```
+---
+
+
+
+# Notes
+
+- The repository extends the original HolisticRCA implementation by adding a **complete data preprocessing pipeline**.
+
+---
